@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>UKW Management</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
+
+<style>
+
+body{
+font-family:'Patrick Hand', cursive;
+background:#efe7da;
+background-image:url("https://www.transparenttextures.com/patterns/paper.png");
+}
+
+.main-card{
+background:#fff1e6;
+border:3px solid #ddb892;
+box-shadow:8px 8px 0px #b08968;
+}
+
+.tape{
+position:absolute;
+width:120px;
+height:25px;
+background:#fbc4ab;
+top:-12px;
+left:40%;
+opacity:0.7;
+transform:rotate(-3deg);
+}
+
+.box{
+background:#fefae0;
+border:2px dashed #dda15e;
+}
+
+.btn{
+background:#bc6c25;
+color:white;
+transition:0.2s;
+}
+
+.btn:hover{
+background:#99582a;
+transform:scale(1.03);
+}
+
+thead{
+background:#faedcd;
+}
+
+.title{
+font-size:40px;
+letter-spacing:2px;
+}
+
+</style>
+
+</head>
+
+<body class="p-6">
+
+<div class="max-w-3xl mx-auto p-8 rounded-xl main-card relative">
+
+<div class="tape"></div>
+
+<h1 class="text-center mb-8 title">💰 UKW Management</h1>
+
+<div class="grid grid-cols-3 gap-4 text-center mb-8">
+
+<div class="p-4 rounded-lg box">
+<p>Total Income</p>
+<p id="totalIn" class="text-green-700">Rp 0</p>
+</div>
+
+<div class="p-4 rounded-lg box">
+<p>Total Expense</p>
+<p id="totalOut" class="text-red-700">Rp 0</p>
+</div>
+
+<div class="p-4 rounded-lg box">
+<p>Balance</p>
+<p id="balance">Rp 0</p>
+</div>
+
+</div>
+
+<div class="space-y-3 mb-6">
+
+<input id="desc" placeholder="Description"
+class="w-full p-2 border rounded">
+
+<input id="amount" type="number" placeholder="Amount (Rp)"
+class="w-full p-2 border rounded">
+
+<select id="type" class="w-full p-2 border rounded">
+<option value="in">Money In</option>
+<option value="out">Money Out</option>
+</select>
+
+<button onclick="addTransaction()" class="w-full p-2 rounded btn">
+Add Transaction
+</button>
+
+</div>
+
+<h2 class="text-lg mb-3">Transaction History</h2>
+
+<table class="w-full text-sm">
+
+<thead>
+<tr>
+<th class="p-2">Description</th>
+<th class="p-2">Date & Time</th>
+<th class="p-2 text-right">Amount</th>
+<th class="p-2 text-center">Delete</th>
+</tr>
+</thead>
+
+<tbody id="historyBody"></tbody>
+
+</table>
+
+</div>
+
+<script>
+
+let transactions = JSON.parse(localStorage.getItem('kas_data')) || [];
+
+function formatRupiah(num){
+return "Rp " + Number(num).toLocaleString('id-ID');
+}
+
+function getDateTime(){
+const now = new Date();
+
+return now.toLocaleString("id-ID",{
+day:"2-digit",
+month:"short",
+year:"numeric",
+hour:"2-digit",
+minute:"2-digit",
+second:"2-digit"
+});
+}
+
+function updateUI(){
+
+const historyBody=document.getElementById('historyBody');
+historyBody.innerHTML='';
+
+let totalIn=0;
+let totalOut=0;
+
+transactions.forEach((t,index)=>{
+
+const row=document.createElement('tr');
+
+const color=t.type==='in'?'green':'red';
+const prefix=t.type==='in'?'+':'-';
+
+row.innerHTML=`
+
+<td class="p-2">${t.desc}</td>
+
+<td class="p-2">${t.time}</td>
+
+<td class="p-2 text-right text-${color}-600">
+${prefix} ${formatRupiah(t.amount)}
+</td>
+
+<td class="text-center">
+<button onclick="deleteItem(${index})">❌</button>
+</td>
+
+`;
+
+historyBody.appendChild(row);
+
+if(t.type==='in') totalIn+=Number(t.amount);
+else totalOut+=Number(t.amount);
+
+});
+
+document.getElementById('totalIn').innerText=formatRupiah(totalIn);
+document.getElementById('totalOut').innerText=formatRupiah(totalOut);
+document.getElementById('balance').innerText=formatRupiah(totalIn-totalOut);
+
+localStorage.setItem('kas_data',JSON.stringify(transactions));
+
+}
+
+function addTransaction(){
+
+const desc=document.getElementById('desc').value;
+const amount=document.getElementById('amount').value;
+const type=document.getElementById('type').value;
+
+if(!desc||!amount) return alert("Please fill all fields");
+
+const time = getDateTime();
+
+transactions.push({desc,amount,type,time});
+
+updateUI();
+
+document.getElementById('desc').value='';
+document.getElementById('amount').value='';
+
+}
+
+function deleteItem(index){
+
+if(confirm("Delete this transaction?")){
+transactions.splice(index,1);
+updateUI();
+}
+
+}
+
+updateUI();
+
+</script>
+
+</body>
+</html>
